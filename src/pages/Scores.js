@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const NUM_HOLES = 18;
 
@@ -12,6 +13,7 @@ function getInitialScores(players) {
 }
 
 function Scores() {
+  const location = useLocation();
   // Reset all scores and handicaps
   const handleReset = () => {
     setPlayers((prev) => prev.map((p) => ({ ...p, handicap: '', scores: Array(NUM_HOLES).fill('') })));
@@ -39,28 +41,20 @@ function Scores() {
       picks = [];
     }
     setPickedPros(picks);
-    // Load from localStorage if exists
+    // Always use the current pick for the pro, and reset pro data if the pick changes
     const saved = localStorage.getItem('fantasyGolfScores');
+    let user = { name: 'You', handicap: '', scores: Array(NUM_HOLES).fill('') };
+    let pro = picks.length > 0 ? { name: picks[0], handicap: '', scores: Array(NUM_HOLES).fill('') } : null;
     if (saved) {
-      const { user, pros } = JSON.parse(saved);
-      setUserName(user.name);
-      setUserHandicap(user.handicap);
-      // Only keep one pro if present
-      const proArr = Array.isArray(pros) && pros.length > 0 ? [pros[0]] : [];
-      setPlayers([
-        { name: user.name, handicap: user.handicap, scores: user.scores },
-        ...proArr.map((p) => ({ name: p.name, handicap: p.handicap, scores: p.scores })),
-      ]);
-      return;
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.user) user = { ...user, ...parsed.user };
+      } catch {}
     }
-    // Default: user + one pro
-    setPlayers(
-      getInitialScores([
-        { name: 'You', handicap: '', },
-        ...picks.map((name) => ({ name, handicap: '' })),
-      ])
-    );
-  }, []);
+    setUserName(user.name);
+    setUserHandicap(user.handicap);
+    setPlayers(pro ? [user, pro] : [user]);
+  }, [location]);
 
   // Save to localStorage on change
   useEffect(() => {

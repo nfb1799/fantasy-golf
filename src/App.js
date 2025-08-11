@@ -9,7 +9,7 @@ import Scores from './pages/Scores';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/fantasy-golf">
       <div className="App">
         <nav style={{
           width: '100%',
